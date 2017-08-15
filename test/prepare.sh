@@ -14,6 +14,3 @@ echo -n -e "abc003\n" >>2.srds
 echo -n -e "efg007\n" >>2.srds
 echo -n -e "efg008\n" >>2.srds
 
-cp ../build/hex2rds   ~/bin/
-cp ../build/srdsgrep  ~/bin/
-cp ../build/srdsmerge ~/bin/
