@@ -22,9 +22,9 @@ see https://github.com/hayguen/srds-tools
 cd srds-tools/pwned-passwords
 
 
-* other tools, like sort, sha1sum, od, 7z and wget, are required. install them with:
+* other tools, like sort, sha1sum, awk, od, 7z and wget, are required. install them with:
 
-sudo apt-get install coreutils wget p7zip-full
+sudo apt-get install coreutils wget gawk p7zip-full
 
 
 * download and prepare the password database with
@@ -48,5 +48,4 @@ call without parameters
 ./rm-temporary-files.sh
 
 if you need that space
-
 
