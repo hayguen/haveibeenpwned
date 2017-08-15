@@ -4,8 +4,8 @@
 * srdsmerge sorted raw data set merge
 
 * convert text/csv files to rds:
-  cat input.txt | cut -b 1-20 | od -A n -t x1 -w20 -v | sed 's/ //g'
-sed is not necessary, but reduces the output file size
+  cat input.txt | cut -b 1-20 | od -A n -t x1 -w20 -v | sed 's/ //g' | hex2rds -o output.rds
+sed is not necessary, but reduces the output file size, when output shall be stored
 
 * application / purpose:
 pwned-passwords has a sha1-database with 40 characters each line for the 20-byte SHA1 sum.
