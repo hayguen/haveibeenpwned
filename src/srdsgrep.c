@@ -4,6 +4,7 @@
  * derived from sgrep (sorted grep),
  * see http://sgrep.sourceforge.net/
  * see https://sourceforge.net/projects/sgrep/
+ * see http://struct.cc/blog/2011/08/10/the-power-of-sorted-grep/
  *
  * Copyright 2017 Hayati Ayguen.  Distributed under the terms
  * of the GNU General Public License (GPL)
