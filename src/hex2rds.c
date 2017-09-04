@@ -11,6 +11,7 @@
  * Author:  Hayati Ayguen
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -126,6 +127,9 @@ int main(int argc, char *argv[])
   int i = 0;
   unsigned converted = 0;
 
+  char * lineBuf = NULL;
+  unsigned char * binBuf = NULL;
+
   while (1)
   {
 
@@ -134,7 +138,7 @@ int main(int argc, char *argv[])
       if ( !strcmp(argv[i], "-n") && i+1 < argc )
       {
         int tmp = atoi( argv[i+1] );
-        if (rawSize <= 0)
+        if (tmp <= 0)
         {
           fprintf(stderr, "error: rawSize (value for '-n' = '%s') must be > 0 !\n", argv[i+1]);
           ret = 10;
@@ -188,16 +192,17 @@ int main(int argc, char *argv[])
 
     /* assume up to 3 characters (2 nibbles + 1 space) per byte and some extra spaces */
     const int bufLen = ( rawSize > 0 ) ? (rawSize * 3 + 16) : 1024;
-    char * lineBuf = malloc( bufLen * sizeof(char) );
+    free(lineBuf);
+    lineBuf = malloc( bufLen * sizeof(char) );
     if (!lineBuf)
     {
       fprintf(stderr, "error allocating line buffer of %u bytes!\n", (unsigned)(bufLen*sizeof(char)) );
       ret = 10;
       break;
     }
-    unsigned char * binBuf = NULL;
     if ( rawSize > 0 )
     {
+      free(binBuf);
       binBuf = (unsigned char*)malloc( rawSize * sizeof(unsigned char) );
       if (!binBuf)
       {
@@ -226,6 +231,7 @@ int main(int argc, char *argv[])
           }
           rawSize = len / 2;
           fprintf(stderr, "info: using rawSize %d from 1st line with hexLen %d\n", (int)rawSize, len);
+          free(binBuf);
           binBuf = (unsigned char*)malloc( rawSize * sizeof(unsigned char) );
           if (!binBuf)
           {
@@ -260,6 +266,9 @@ int main(int argc, char *argv[])
 
     break;
   }
+
+  free(lineBuf);
+  free(binBuf);
 
   if ( converted )
     fprintf(stderr, "successfully converted %u hexadecimal lines.\n", converted);

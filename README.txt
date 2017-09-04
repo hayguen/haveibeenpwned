@@ -1,7 +1,8 @@
 
-* hex2rds   converts text files with hexadecimal codes to raw data set files
-* srdsgrep  sorted raw data set grep
-* srdsmerge sorted raw data set merge
+* hex2rds        converts text files with hexadecimal codes to raw data set files
+* srdsgrep       sorted raw data set grep
+* srdsmerge      sorted raw data set merge
+* srdshashencode sorted raw data set hash encoding
 
 * convert text/csv files to rds:
   cat input.txt | cut -b 1-20 | od -A n -t x1 -w20 -v | sed 's/ //g' | hex2rds -o output.rds
@@ -16,6 +17,7 @@ This rds storage compresses the database to half size: ~ 6.2 GB.
 Conversion of sorted text database can be done with hex2rds.
 Fast binary search over sorted rds is possible with srdsgrep.
 Sorted database updates can be achieved with srdsmerge - after converting update with hex2rds.
+
 
 
 Usage: hex2rds [-h | --help] [-n <rawSize>] [-i <input>] [-o <output>]
@@ -49,3 +51,15 @@ Usage: srdsmerge [-v][-h][-r][-l <blockLength>][-b <keyBegin>][-e <keyEnd>][-o <
   -e <v> key's end offset inside block
   -o <f> output to file. default is stdout
   sorted_file  minimum 2 filenamess required
+
+Usage: srdshashencode [-v][-h][-B <bufferSize>][-c|-d][-l <blockLength>] [-i <input>] [-o <output>]
+  sorted raw data set hash coding
+  encoding preconditons sorted hash data for better compression
+  -v     verbose output
+  -h     print usage
+  -B <v> bufferSize in Bytes
+  -c     encode data (=default)
+  -d     decode data
+  -l <v> length of each raw data set block in bytes (= cycle length, 20 for SHA-1)
+  -i <f> input from file. default is stdin
+  -o <f> output to file. default is stdout

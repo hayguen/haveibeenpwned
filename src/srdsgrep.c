@@ -55,6 +55,7 @@
 #endif
 
 #include <sys/stat.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -179,7 +180,7 @@ int compare(FILE *fp)
 static off_t
 binsrch(FILE *fp, int reverse) {
     off_t low, med, high, prev = -1, ret = -1;
-    int cmp, c;
+    int cmp;
     struct stat st;
 
     fstat(fileno(fp), &st);
@@ -232,7 +233,7 @@ static void
 printmatch(FILE *fp, off_t start,
     const char *fname, int cflag, int maxcount)
 {
-  int c, count = 0;
+  int count = 0;
 
   for ( ; start >= 0 && ( maxcount < 0 || count < maxcount ); ) {
     fseeko(fp, start, SEEK_SET);
@@ -249,6 +250,10 @@ printmatch(FILE *fp, off_t start,
       if (readBlockBuf && !cflag)
       {
         size_t w = fwrite( blockBuf, blockSize, 1, stdout );
+        if ( w != 1 ) {
+          fprintf(stderr, "Error writing all matches to output!\n");
+          break;
+        }
 #if DBGOUT
 fprintf(stdout, "\n");
 #endif
@@ -287,7 +292,6 @@ void usage() {
 
 
 int main(int argc, char **argv) {
-  FILE *fp;
   const char *keyarg = 0;
   int i, numfile, status;
   int helpFlag = 0;
@@ -428,7 +432,8 @@ int main(int argc, char **argv) {
 
   /* search each input file */
   for (status = 1; i < argc; i++) {
-    if ((fp = fopen(argv[i], "rb")) == 0) {
+    FILE *fp = fopen(argv[i], "rb");
+    if ( !fp ) {
       fprintf(stderr, "srdsgrep: could not open %s\n", argv[i]);
       status = 2;
       continue;
