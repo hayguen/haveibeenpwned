@@ -20,8 +20,10 @@
 #include <inttypes.h>
 
 #ifdef __SSE2__
+  #pragma message "__SSE2__ is defined"
   #define SSE2_AVAILABLE  1
 #elif defined(_MSC_VER)
+  #pragma message "_MSC_VER is defined"
   #if (defined(_M_AMD64) || defined(_M_X64))
     //SSE2 x64
     #define SSE2_AVAILABLE  1
@@ -46,14 +48,16 @@ static int blockSize = -1;
 #pragma GCC optimize ("unroll-loops")
 
 #if defined(SSE2_AVAILABLE)
-inline void encode( __m128i * c, const __m128i * a, const __m128i * b, size_t uBlockLen ) {
+#pragma message "compiling encode() for SSE2"
+static inline void encode( __m128i * c, const __m128i * a, const __m128i * b, size_t uBlockLen ) {
   size_t u;
   for ( u = 0; u < uBlockLen; ++u ) {
     c[u] = _mm_sub_epi8( a[u], b[u] );
   }
 }
 #elif USE_64BIT_ARITH
-inline void encode( uint64_t * c, const uint64_t * a, const uint64_t * b, size_t uBlockLen ) {
+#pragma message "compiling encode() for 64 Bit arithmetic"
+static inline void encode( uint64_t * c, const uint64_t * a, const uint64_t * b, size_t uBlockLen ) {
   size_t u;
   for ( u = 0; u < uBlockLen; ++u ) {
     c[u] =  ( ( ( a[u]  | UINT64_C(0xFF00FF00FF00FF00) )
@@ -67,7 +71,8 @@ inline void encode( uint64_t * c, const uint64_t * a, const uint64_t * b, size_t
   }
 }
 #else
-inline void encode( unsigned char * c, const unsigned char * a, const unsigned char * b, size_t uBlockLen ) {
+#pragma message "compiling encode() with fallback options"
+static inline void encode( unsigned char * c, const unsigned char * a, const unsigned char * b, size_t uBlockLen ) {
   size_t u;
   for ( u = 0; u < uBlockLen; ++u )
     c[u] = a[u] - b[u];
@@ -76,14 +81,14 @@ inline void encode( unsigned char * c, const unsigned char * a, const unsigned c
 
 
 #if defined(SSE2_AVAILABLE)
-inline void decode( __m128i * c, const __m128i * a, size_t uBlockLen ) {
+static inline void decode( __m128i * c, const __m128i * a, size_t uBlockLen ) {
   size_t u;
   for ( u = 0; u < uBlockLen; ++u ) {
     c[u] = _mm_add_epi8( c[u], a[u] );
   }
 }
 #elif USE_64BIT_ARITH
-inline void decode( uint64_t * c, const uint64_t * a, size_t uBlockLen ) {
+static inline void decode( uint64_t * c, const uint64_t * a, size_t uBlockLen ) {
   size_t u;
   for ( u = 0; u < uBlockLen; ++u ) {
     /* wp[u] = wp[u] + rp[u]; */
@@ -98,7 +103,7 @@ inline void decode( uint64_t * c, const uint64_t * a, size_t uBlockLen ) {
   }
 }
 #else
-inline void decode( unsigned char * c, const unsigned char * a, size_t uBlockLen ) {
+static inline void decode( unsigned char * c, const unsigned char * a, size_t uBlockLen ) {
   size_t u;
   for ( u = 0; u < uBlockLen; ++u )
     c[u] += a[u];
@@ -116,7 +121,7 @@ void usage() {
   fputs("  encoding preconditons sorted hash data for better compression\n", stderr);
   fputs("  -v     verbose output\n", stderr);
   fputs("  -h     print usage\n",stderr);
-  fputs("  -B <v> bufferSize in Bytes\n", stderr);
+  fputs("  -B <v> bufferSize in kBytes\n", stderr);
   fputs("  -c     encode data (=default)\n",stderr);
   fputs("  -d     decode data\n",stderr);
   fputs("  -l <v> length of each raw data set block in bytes (= cycle length, 20 for SHA-1)\n", stderr);
@@ -133,6 +138,8 @@ int main(int argc, char *argv[]) {
   int encodeFlag = 1;
   int optFlag, k, ret = 0;
   size_t vBufSize = 0;
+  void * rdBuffer = NULL;
+  void * wrBuffer = NULL;
   void * vbuf[4];
 #if defined(SSE2_AVAILABLE)
   __m128i * ubuf[4];
@@ -151,7 +158,7 @@ int main(int argc, char *argv[]) {
     switch(optFlag) {
     case 'v': ++verboseFlag; break;
     case 'h': ++helpFlag; break;
-    case 'B': vBufSize = (size_t)atol(optarg); break;
+    case 'B': vBufSize = (size_t)( atol(optarg) * 1024 ); break;
     case 'c': encodeFlag = 1; break;
     case 'd': encodeFlag = 0; break;
     case 'l':
@@ -272,14 +279,16 @@ int main(int argc, char *argv[]) {
    *
    */
 
-  size_t bufferSize = vBufSize ? vBufSize
-                               : (4*blockSize > 65536)
-                                 ? (4*blockSize)
-                                 : 65536;
-  void * rdBuffer = malloc( bufferSize );
-  void * wrBuffer = malloc( bufferSize );
-  if (rdBuffer) setbuffer( inp, rdBuffer, bufferSize );
-  if (wrBuffer) setbuffer( out, wrBuffer, bufferSize );
+  {
+    size_t bufferSize = vBufSize ? vBufSize
+                                 : (4*blockSize > 65536)
+                                   ? (4*blockSize)
+                                   : 65536;
+    rdBuffer = malloc( bufferSize );
+    wrBuffer = malloc( bufferSize );
+    if (rdBuffer) setbuffer( inp, rdBuffer, bufferSize );
+    if (wrBuffer) setbuffer( out, wrBuffer, bufferSize );
+  }
 
   if (encodeFlag) {
 
@@ -300,7 +309,11 @@ int main(int argc, char *argv[]) {
 
       wr = fwrite( vbuf[2], blockSize, 1, out );
       if (!wr) {
-        fprintf(stderr, "error writing to output!\n");
+        int ferr = ferror(out);
+        if (ferr)
+          fprintf(stderr, "error %d writing to output!: %s\n", ferr, strerror(ferr));
+        else
+          fprintf(stderr, "error %d writing to output!\n", ferr);
         ret = 8;
         break;
       }
@@ -333,7 +346,12 @@ int main(int argc, char *argv[]) {
 
       wr = fwrite( wp, blockSize, 1, out );
       if (!wr) {
-        fprintf(stderr, "error writing to output!\n");
+        int ferr = ferror(out);
+        if (ferr)
+          fprintf(stderr, "error %d writing to output!: %s\n", ferr, strerror(ferr));
+        else
+          fprintf(stderr, "error %d writing to output!\n", ferr);
+        
         ret = 8;
         break;
       }

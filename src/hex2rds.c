@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define DBGOUT  0
 
@@ -28,6 +29,8 @@ int hashLen( const char * s )
   {
     if ( isxdigit(s[idx]) )
       ++len;
+    else if ( ':' == s[idx] )
+      break;
     else if ( isblank(s[idx]) )
       ;  /* ignore space/tab */
     else if ( isspace(s[idx]) )
@@ -79,6 +82,8 @@ int convertHash( const char * s, size_t maxBinLen, unsigned char * bin )
         v = 0;
       }
     }
+    else if ( ':' == s[idx] )
+      break;
     else if ( isblank(s[idx]) )
       ;  /* ignore space/tab */
     else if ( isspace(s[idx]) )
@@ -112,6 +117,7 @@ void usage() {
   fputs("  -h | --help   print usage\n",stderr);
   fputs("  -n <rawSize>  tell expected raw length in bytes, e.g. 20 for SHA1\n",stderr);
   fputs("                by default, the 1st line's length will be used\n",stderr);
+  fputs("  -B <v>        bufferSize in kBytes\n", stderr);
   fputs("  -i <input>    use input from file. default: stdin\n",stderr);
   fputs("  -o <output>   output to file. default: stdout\n",stderr);
 }
@@ -129,6 +135,9 @@ int main(int argc, char *argv[])
 
   char * lineBuf = NULL;
   unsigned char * binBuf = NULL;
+  size_t vBufSize = 0;
+  void * rdBuffer = NULL;
+  void * wrBuffer = NULL;
 
   while (1)
   {
@@ -145,6 +154,11 @@ int main(int argc, char *argv[])
           break;
         }
         rawSize = tmp;
+        ++i;
+      }
+      else if ( !strcmp(argv[i], "-B") && i+1 < argc )
+      {
+        vBufSize = (size_t)( atol( argv[i+1] ) * 1024L );
         ++i;
       }
       else if ( !strcmp(argv[i], "-i") && i+1 < argc )
@@ -213,6 +227,14 @@ int main(int argc, char *argv[])
     }
     int lineNo = 0;
 
+    {
+      size_t bufferSize = vBufSize ? vBufSize : 65536;
+      rdBuffer = malloc( bufferSize );
+      wrBuffer = malloc( bufferSize );
+      if (rdBuffer) setbuffer( inp, rdBuffer, bufferSize );
+      if (wrBuffer) setbuffer( out, wrBuffer, bufferSize );
+    }
+
     while ( !ret && !feof(inp))
     {
       char * r = fgets(lineBuf, bufLen, inp);
@@ -255,7 +277,11 @@ int main(int argc, char *argv[])
           size_t w = fwrite( binBuf, rawSize, 1, out );
           if ( w != 1 )
           {
-            fprintf(stderr, "error writing binary for line %d to output!\n", lineNo);
+            int ferr = ferror(out);
+            if (ferr)
+              fprintf(stderr, "error %d writing binary for line %d to output!: %s\n", ferr, lineNo, strerror(ferr));
+            else
+              fprintf(stderr, "error %d writing binary for line %d to output!\n", ferr, lineNo);
             ret = 10;
             break;
           }
@@ -273,10 +299,14 @@ int main(int argc, char *argv[])
   if ( converted )
     fprintf(stderr, "successfully converted %u hexadecimal lines.\n", converted);
 
-  if ( inp != stdin )
-    fclose(inp);
-  if ( out != stdout )
+  if ( out != stdout ) {
     fclose(out);
+    free( wrBuffer );
+  }
+  if ( inp != stdin ) {
+    fclose(inp);
+    free( rdBuffer );
+  }
 
   return ret;
 }

@@ -282,6 +282,7 @@ void usage() {
   fputs("  -h     print usage\n",stderr);
   fputs("  -c     print count matches - not matching contents\n", stderr);
   fputs("  -m <v> stop reading file after N matches. default is no stop.\n", stderr);
+  fputs("  -B <v> bufferSize in kBytes\n", stderr);
   fputs("  -r     sorted file is reversed (descending) order\n", stderr);
   fputs("  -l <v> length of each binary block in bytes\n", stderr);
   fputs("  -b <v> key's begin offset inside block\n", stderr);
@@ -291,21 +292,25 @@ void usage() {
 }
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   const char *keyarg = 0;
   int i, numfile, status;
   int helpFlag = 0;
   int countFlag = 0, revFlag = 0, hexFlag = 0, fileFlag = 0, maxcount = -1;
   int changedKeyOrBlock = 0;
   off_t where;
+  size_t vBufSize = 0;
+  void * rdBuffer = NULL;
   struct stat st;
   extern int optind;
 
   /* parse command line options */
-  while ((i = getopt(argc, argv, "vhcrxm:l:b:e:")) > 0 && i != '?') {
+  while ((i = getopt(argc, argv, "vhB:crxm:l:b:e:")) > 0 && i != '?') {
     switch(i) {
     case 'v': ++verboseFlag; break;
     case 'h': ++helpFlag; break;
+    case 'B': vBufSize = (size_t)( atol(optarg) * 1024 ); break;
     case 'c': ++countFlag; break;
     case 'r': ++revFlag; break;
     case 'x': ++hexFlag; break;
@@ -420,18 +425,24 @@ int main(int argc, char **argv) {
   /* if no input files, then search stdin */
 
   if ((numfile = argc - i) == 0) {
+    size_t bufferSize = vBufSize ? vBufSize : 65536;
     fstat(fileno(stdin), &st);
     if ((st.st_mode & S_IFREG) == 0) {
       fputs("srdsgrep: STDIN is not a regular file\n", stderr);
       exit(2);
     }
+    rdBuffer = malloc( bufferSize );
+    if (rdBuffer) setbuffer( stdin, rdBuffer, bufferSize );
+
     where = binsrch(stdin, revFlag);
     printmatch(stdin, where, 0, countFlag, maxcount);
+
     exit(where < 0);
   }
 
   /* search each input file */
   for (status = 1; i < argc; i++) {
+    size_t bufferSize = vBufSize ? vBufSize : 65536;
     FILE *fp = fopen(argv[i], "rb");
     if ( !fp ) {
       fprintf(stderr, "srdsgrep: could not open %s\n", argv[i]);
@@ -445,12 +456,17 @@ int main(int argc, char **argv) {
       fclose(fp);
       continue;
     }
+
+    rdBuffer = malloc( bufferSize );
+    if (rdBuffer) setbuffer( fp, rdBuffer, bufferSize );
+
     where = binsrch(fp, revFlag);
     printmatch(fp, where, numfile == 1 ? 0 : argv[i], countFlag, maxcount);
     if (status == 1 && where >= 0) {
       status = 0;
     }
     fclose(fp);
+    free( rdBuffer );
   }
   exit(status);
 }

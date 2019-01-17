@@ -31,6 +31,7 @@ static int keyLen = -1;
 static int verboseFlag = 0;
 
 static FILE * input[MAXINFILES];
+static void * rdBuffers[MAXINFILES];
 static size_t readBlockBuf[MAXINFILES];
 static unsigned char * blockBuf[MAXINFILES];
 
@@ -40,6 +41,7 @@ void usage() {
   fputs("  sorted raw data set merge\n", stderr);
   fputs("  -v     verbose output\n", stderr);
   fputs("  -h     print usage\n",stderr);
+  fputs("  -B <v> bufferSize in kBytes\n", stderr);
   fputs("  -r     sorted files are reversed (descending) order\n", stderr);
   fputs("  -l <v> length of each raw data set block in bytes\n", stderr);
   fputs("  -b <v> key's begin offset inside block\n", stderr);
@@ -60,13 +62,17 @@ int main(int argc, char *argv[]) {
   int helpFlag = 0;
   int revFlag = 0;
   int changedKeyOrBlock = 0;
+  size_t vBufSize = 0;
+  size_t bufferSize = 0;
+  void * wrBuffer = NULL;
   extern int optind;
 
   /* parse command line options */
-  while ((optFlag = getopt(argc, argv, "vhrl:b:e:o:")) > 0 && optFlag != '?') {
+  while ((optFlag = getopt(argc, argv, "vhB:rl:b:e:o:")) > 0 && optFlag != '?') {
     switch(optFlag) {
     case 'v': ++verboseFlag; break;
     case 'h': ++helpFlag; break;
+    case 'B': vBufSize = (size_t)( atol(optarg) * 1024 ); break;
     case 'r': ++revFlag; break;
     case 'l':
       blockSize = atoi(optarg);
@@ -133,6 +139,7 @@ int main(int argc, char *argv[]) {
     return 10;
   }
 
+  bufferSize = vBufSize ? vBufSize : 65536;
 
   /* search each input file */
   for ( ; optFlag < argc; optFlag++) {
@@ -143,6 +150,8 @@ int main(int argc, char *argv[]) {
     }
 
     input[numInputs] = fp;
+    rdBuffers[numInputs] = malloc( bufferSize );
+    if (rdBuffers[numInputs]) setbuffer( fp, rdBuffers[numInputs], bufferSize );
     blockBuf[numInputs] = (unsigned char *)malloc( blockSize * sizeof(unsigned char) );
     readBlockBuf[numInputs] = fread( blockBuf[numInputs], blockSize, 1, input[numInputs] );
     isAvailable = (int)( readBlockBuf[numInputs] );
@@ -174,6 +183,9 @@ int main(int argc, char *argv[]) {
       exit(8);
     }
   }
+
+  wrBuffer = malloc( bufferSize );
+  if (wrBuffer) setbuffer( out, wrBuffer, bufferSize );
 
   while ( numAvailable )
   {
@@ -229,8 +241,10 @@ int main(int argc, char *argv[]) {
 
   }
 
-  if ( out != stdout )
+  if ( out != stdout ) {
     fclose(out);
+    free( wrBuffer );
+  }
 
   return 0;
 }
