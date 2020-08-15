@@ -2,7 +2,7 @@
 
 if [ -f pwd-full.srds ]; then
 
-  S="pwned-passwords-sha1-ordered-by-hash-v4.7z"
+  S="pwned-passwords-sha1-ordered-by-hash-v6.7z"
   if [ -f "$S" ]; then
     TS="$(date -r "$S" +%s)"
     TD="$(date -r pwd-full.srds +%s)"
