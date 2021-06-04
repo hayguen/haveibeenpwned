@@ -1,9 +1,9 @@
 #!/bin/bash
 
-HASH_N="pwned-passwords-sha1-ordered-by-hash-v6"
-ARCH_SHA="f0447a064aee7e3b658959fab54dba79b926f429"
+HASH_N="pwned-passwords-sha1-ordered-by-hash-v7"
+ARCH_SHA="dba43bd82997d5cef156219cb0d295e1ab948727"
 
-echo "continue/download compressed 7zip archive v6 ordered by hash"
+echo "continue/download compressed 7zip archive v7 ordered by hash"
 wget -c "https://downloads.pwnedpasswords.com/passwords/${HASH_N}.7z"
 
 echo "verify donwloaded files' integrity via SHA1 hash values against ${ARCH_SHA}"
