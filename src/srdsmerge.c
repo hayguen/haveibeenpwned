@@ -47,7 +47,7 @@ void usage() {
   fputs("  -b <v> key's begin offset inside block\n", stderr);
   fputs("  -e <v> key's end offset inside block\n", stderr);
   fputs("  -o <f> output to file. default is stdout\n", stderr);
-  fputs("  sorted_file  minimum 2 filenamess required\n", stderr);
+  fputs("  sorted_file  minimum 2 filenames required\n", stderr);
 }
 
 

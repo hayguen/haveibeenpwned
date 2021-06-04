@@ -12,6 +12,8 @@ add_executable(srdsgrep "srdsgrep.c")
 
 add_executable(srdsmerge "srdsmerge.c")
 
+add_executable(srdscheck "srdscheck.c")
+
 add_executable(srdshashencode "srdshashencode.c")
 
-install(TARGETS hex2rds srdsgrep srdsmerge srdshashencode DESTINATION bin )
+install(TARGETS hex2rds srdsgrep srdsmerge srdscheck srdshashencode DESTINATION bin )
