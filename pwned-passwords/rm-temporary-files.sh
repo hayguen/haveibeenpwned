@@ -2,7 +2,7 @@
 
 if [ -f pwd-full.srds ]; then
 
-  S="pwned-passwords-sha1-ordered-by-hash-v6.7z"
+  S="pwned-passwords-sha1-ordered-by-hash-v8.7z"
   if [ -f "$S" ]; then
     TS="$(date -r "$S" +%s)"
     TD="$(date -r pwd-full.srds +%s)"
@@ -22,6 +22,9 @@ if [ -f pwd-full.srds ]; then
   rm pwned-passwords-1.0.txt.7z
   rm pwned-passwords-update-1.txt.7z
   rm pwned-passwords-update-2.txt.7z
+  rm pwned-passwords-sha1-ordered-by-hash-v4.7z
+  rm pwned-passwords-sha1-ordered-by-hash-v6.7z
+  rm pwned-passwords-sha1-ordered-by-hash-v7.7z
 
 else
   echo "not removing temporary files, cause pwd-full.srds does NOT exist!"

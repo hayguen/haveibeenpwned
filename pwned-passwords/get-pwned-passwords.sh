@@ -1,9 +1,10 @@
 #!/bin/bash
 
-HASH_N="pwned-passwords-sha1-ordered-by-hash-v7"
-ARCH_SHA="dba43bd82997d5cef156219cb0d295e1ab948727"
+DBVER="Version 8"
+HASH_N="pwned-passwords-sha1-ordered-by-hash-v8"
+ARCH_SHA="3499a3f82bb94f62cbd9bc782d6d20324e7cde8e"
 
-echo "continue/download compressed 7zip archive v7 ordered by hash"
+echo "continue/download compressed 7zip archive ${DBVER} - ordered by hash"
 wget -c "https://downloads.pwnedpasswords.com/passwords/${HASH_N}.7z"
 
 echo ""
