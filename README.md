@@ -56,12 +56,12 @@ read and follow the printed instructions
 open a terminal and `cd` into subdirectory the `pwned-passwords` of the cloned  git repository `haveibeenpwned`.
 now you can check with
 ```
-./is-pwned-password.sh 'a-password'
+./haveibeenpwned 'a-password'
 ```
 
 e.g.
 ```
-./is-pwned-password.sh 'this$is/my ultra!secret_pwd'
+./haveibeenpwned 'this$is/my ultra!secret_pwd'
 ```
 
 interestingly, this is reported to be safe with database V8:
@@ -71,9 +71,16 @@ password not in database: password is OK
 
 negative examples are
 ```
-./is-pwned-password.sh '123'
-./is-pwned-password.sh 'secret'
-./is-pwned-password.sh 'password'
+./haveibeenpwned '123'
+./haveibeenpwned 'secret'
+./haveibeenpwned 'password'
+```
+
+## setup
+
+when everything runs fine, you might wanto to install with
+```
+./setup.sh [<prefix>]
 ```
 
 
