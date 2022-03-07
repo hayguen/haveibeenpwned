@@ -14,7 +14,7 @@ it inspired to develop the programs and scripts in this repository.
 see following links:
 
 * [https://haveibeenpwned.com/Passwords](https://haveibeenpwned.com/Passwords)
-* [https://www.troyhunt.com/introducing-306-million-freely-downloadable-pwned-passwords/](https://www.troyhunt.com/introducing-306-million-freely-downloadable-pwned-passwords/])
+* [https://www.troyhunt.com/introducing-306-million-freely-downloadable-pwned-passwords/](https://www.troyhunt.com/introducing-306-million-freely-downloadable-pwned-passwords/)
 
 
 ## setup (for debian/ubuntu) linux:
